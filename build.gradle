@@ -27,7 +27,8 @@ dependencies {
         'javax.cache:cache-api',
         'jakarta.xml.bind:jakarta.xml.bind-api',
         'org.flywaydb:flyway-core',
-        'org.springframework.kafka:spring-kafka'
+        'org.springframework.kafka:spring-kafka',
+        'org.springframework.boot:spring-boot-docker-compose'
     )
 
     runtimeOnly (
