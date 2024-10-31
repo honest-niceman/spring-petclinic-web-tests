@@ -40,6 +40,19 @@ public class OwnerRestControllerTest {
     }
 
     @Test
+    @DisplayName("POST, negative path: id must be null")
+    public void createIdNotNull() throws Exception {
+        String ownerDto = getOwnerAsJson(1, "John", "Doe", "123 Main St", "Anytown", "8996746899");
+
+        mockMvc.perform(post("/rest/owners")
+                        .content(ownerDto)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status()
+                        .isUnprocessableEntity())
+                .andDo(print());
+    }
+
+    @Test
     @DisplayName("POST, happy path")
     public void create() throws Exception {
         String ownerDto = getOwnerAsJson(null, "John", "Doe", "123 Main St", "Anytown", "8996746899");
