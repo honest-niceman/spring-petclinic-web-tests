@@ -17,7 +17,10 @@ import java.io.UnsupportedEncodingException;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -38,6 +41,48 @@ public class OwnerRestControllerTest {
     @BeforeEach
     public void setup() {
         ownerRepository.deleteAll();
+    }
+
+    @Test
+    @DisplayName("PUT, negative path: entity not found")
+    public void updateEntityNotFound() throws Exception {
+        String dto = """
+                {
+                  "id": 999,
+                  "firstName": "Johny",
+                  "lastName": "Doe-vie",
+                  "address": "123 Main Street",
+                  "city": "California",
+                  "telephone": "000000000"
+                }""";
+
+        mockMvc.perform(put("/rest/owners/{0}", 999)
+                        .content(dto)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status()
+                        .isNotFound())
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("PUT, negative path: ids aren't equal")
+    public void updateIdsArentEqual() throws Exception {
+        String dto = """
+                {
+                  "id": 999,
+                  "firstName": "Johny",
+                  "lastName": "Doe-vie",
+                  "address": "123 Main Street",
+                  "city": "California",
+                  "telephone": "000000000"
+                }""";
+
+        mockMvc.perform(put("/rest/owners/{0}", 0)
+                        .content(dto)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status()
+                        .isBadRequest())
+                .andDo(print());
     }
 
     @Test
