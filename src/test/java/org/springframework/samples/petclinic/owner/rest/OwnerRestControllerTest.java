@@ -12,15 +12,14 @@ import org.springframework.samples.petclinic.owner.OwnerRepository;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.io.UnsupportedEncodingException;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -41,6 +40,76 @@ public class OwnerRestControllerTest {
     @BeforeEach
     public void setup() {
         ownerRepository.deleteAll();
+    }
+
+    @Test
+    @DisplayName("PATCH, negative path: ids aren't equal")
+    public void partialUpdateIdsArentEqual() throws Exception {
+        String dto = """
+                {
+                  "id": 999,
+                  "firstName": "Johny",
+                  "lastName": "Doe-vie",
+                  "address": "123 Main Street",
+                  "city": "California",
+                  "telephone": "000000000"
+                }""";
+
+        mockMvc.perform(MockMvcRequestBuilders.patch("/rest/owners/{0}", 0)
+                        .content(dto)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status()
+                        .isBadRequest())
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("PATCH, negative path: entity not found")
+    public void partialUpdateEntityNotFound() throws Exception {
+        String dto = """
+                {
+                  "id": 999,
+                  "firstName": "Johny",
+                  "lastName": "Doe-vie",
+                  "address": "123 Main Street",
+                  "city": "California",
+                  "telephone": "000000000"
+                }""";
+
+        mockMvc.perform(MockMvcRequestBuilders.patch("/rest/owners/{0}", 999)
+                        .content(dto)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status()
+                        .isNotFound())
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("PATH, positive path")
+    public void patch() throws Exception {
+        String ownerAsJson = getOwnerAsJson(null, "John", "Doe", "123 Main St", "Anytown", "8996746899");
+        MvcResult mvcResult = saveOwner(ownerAsJson);
+        Integer id = getId(mvcResult);
+
+        String patchNode = """
+                  {
+                    "id": %d,
+                    "firstName": "Johny",
+                    "lastName": null
+                  }
+                """.formatted(id);
+
+        mockMvc.perform(MockMvcRequestBuilders.patch("/rest/owners/{0}", id)
+                        .content(patchNode)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status()
+                        .isOk())
+                .andExpect(jsonPath("$.firstName").value("Johny"))
+                .andExpect(jsonPath("$.lastName").value(nullValue()))
+                .andExpect(jsonPath("$.city").value("Anytown"))
+                .andExpect(jsonPath("$.telephone").value("8996746899"))
+                .andExpect(jsonPath("$.address").value("123 Main St"))
+                .andDo(print());
     }
 
     @Test
