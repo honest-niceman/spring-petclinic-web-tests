@@ -17,9 +17,12 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import java.io.UnsupportedEncodingException;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -40,6 +43,30 @@ public class OwnerRestControllerTest {
     @BeforeEach
     public void setup() {
         ownerRepository.deleteAll();
+    }
+
+    @Test
+    @DisplayName("DELETE, negative path: entity not found")
+    public void deleteEntityNotFound() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.delete("/rest/owners/{0}", 999))
+                .andExpect(status()
+                        .isOk())
+                .andExpect(content().string(emptyString()))
+                .andDo(print());
+    }
+
+
+    @Test
+    @DisplayName("DELETE, positive path")
+    public void delete() throws Exception {
+        String ownerAsJson = getOwnerAsJson(null, "John", "Doe", "123 Main St", "Anytown", "8996746899");
+        MvcResult mvcResult = saveOwner(ownerAsJson);
+        Integer id = getId(mvcResult);
+
+        mockMvc.perform(MockMvcRequestBuilders.delete("/rest/owners/{0}", id))
+                .andExpect(status()
+                        .isOk())
+                .andDo(print());
     }
 
     @Test
