@@ -16,8 +16,10 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.io.UnsupportedEncodingException;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -40,6 +42,24 @@ public class OwnerRestControllerTest {
     }
 
     @Test
+    @DisplayName("GET, positive path")
+    public void getOne() throws Exception {
+        String ownerAsJson = getOwnerAsJson(null, "John", "Doe", "123 Main St", "Anytown", "8996746899");
+        MvcResult mvcResult = saveOwner(ownerAsJson);
+        Integer id = getId(mvcResult);
+
+        mockMvc.perform(get("/rest/owners/{0}", id))
+                .andExpect(status()
+                        .isOk())
+                .andExpect(jsonPath("$.address").doesNotExist())
+                .andExpect(jsonPath("$.telephone").doesNotExist())
+                .andExpect(jsonPath("$.firstName").value("John"))
+                .andExpect(jsonPath("$.lastName").value("Doe"))
+                .andExpect(jsonPath("$.city").value("Anytown"))
+                .andDo(print());
+    }
+
+    @Test
     @DisplayName("POST, negative path: id must be null")
     public void createIdNotNull() throws Exception {
         String ownerDto = getOwnerAsJson(1, "John", "Doe", "123 Main St", "Anytown", "8996746899");
@@ -56,15 +76,7 @@ public class OwnerRestControllerTest {
     @DisplayName("POST, happy path")
     public void create() throws Exception {
         String ownerDto = getOwnerAsJson(null, "John", "Doe", "123 Main St", "Anytown", "8996746899");
-
-        MvcResult mvcResult = mockMvc.perform(post("/rest/owners")
-                        .content(ownerDto)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status()
-                        .isOk())
-                .andDo(print())
-                .andReturn();
-
+        MvcResult mvcResult = saveOwner(ownerDto);
         Integer id = getId(mvcResult);
 
         assertThat(ownerRepository.findById(id)
@@ -72,6 +84,16 @@ public class OwnerRestControllerTest {
         assertThat(ownerRepository.findById(id)
                 .get()
                 .getFirstName()).isEqualTo("John");
+    }
+
+    private MvcResult saveOwner(String ownerDto) throws Exception {
+        return mockMvc.perform(post("/rest/owners")
+                        .content(ownerDto)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status()
+                        .isOk())
+                .andDo(print())
+                .andReturn();
     }
 
     private static Integer getId(MvcResult mvcResult) throws UnsupportedEncodingException {
