@@ -20,11 +20,8 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.hamcrest.Matchers.emptyString;
 import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * Test class for the {@link OwnerRestController}
@@ -44,6 +41,78 @@ public class OwnerRestControllerTest {
     public void setup() {
         ownerRepository.deleteAll();
     }
+
+    @Test
+    @DisplayName("GET ALL, positive path: pagination")
+    public void getAllOwnersPaginationReturnsPaginatedResults() throws Exception {
+        String ownerAsJson = getOwnerAsJson(null, "John", "Doe", "123 Main St", "Anytown", "8996746899");
+        saveOwner(ownerAsJson);
+        saveOwner(ownerAsJson);
+        saveOwner(ownerAsJson);
+
+        mockMvc.perform(get("/rest/owners").param("page", "0").param("size", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("GET ALL, positive path: without pagination")
+    public void getAllOwners() throws Exception {
+        String ownerAsJson = getOwnerAsJson(null, "John", "Doe", "123 Main St", "Anytown", "8996746899");
+        saveOwner(ownerAsJson);
+        saveOwner(ownerAsJson);
+        saveOwner(ownerAsJson);
+
+        mockMvc.perform(get("/rest/owners"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.content.length()").value(3))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("GET ALL, positive path: filter by first name")
+    public void getAllOwnersFilterByFirstNameReturnsFilteredOwners() throws Exception {
+        String ownerJohnAsJson = getOwnerAsJson(null, "John", "Doe", "123 Main St", "Anytown", "8996746899");
+        saveOwner(ownerJohnAsJson);
+        saveOwner(ownerJohnAsJson);
+        String ownerAliceAsJson = getOwnerAsJson(null, "Alice", "Brown", "123 Main St", "Anytown", "8996746899");
+        saveOwner(ownerAliceAsJson);
+
+        mockMvc.perform(get("/rest/owners").param("firstNameContains", "John"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].firstName").value("John"))
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("GET ALL, positive path: filter by last name")
+    public void getAllOwnersFilterByLastNameReturnsFilteredOwners() throws Exception {
+        String ownerJohnAsJson = getOwnerAsJson(null, "John", "Doe", "123 Main St", "Anytown", "8996746899");
+        saveOwner(ownerJohnAsJson);
+        saveOwner(ownerJohnAsJson);
+        String ownerAliceAsJson = getOwnerAsJson(null, "Alice", "Brown", "123 Main St", "Anytown", "8996746899");
+        saveOwner(ownerAliceAsJson);
+
+        mockMvc.perform(get("/rest/owners").param("lastNameContains", "doe"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].lastName").value("Doe"))
+                .andExpect(jsonPath("$.content.length()").value(2))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("GET ALL, positive path: wrong filter")
+    public void getAllOwnersInvalidFilterReturnsNoResults() throws Exception {
+        mockMvc.perform(get("/rest/owners").param("firstNameContains", "NonExistent"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isEmpty())
+                .andDo(print());
+    }
+
 
     @Test
     @DisplayName("DELETE, negative path: entity not found")
