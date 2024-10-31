@@ -42,6 +42,15 @@ public class OwnerRestControllerTest {
     }
 
     @Test
+    @DisplayName("GET, negative path: entity not found")
+    public void getOneEntityNotFound() throws Exception {
+        mockMvc.perform(get("/rest/owners/{0}", 999))
+                .andExpect(status()
+                        .isNotFound())
+                .andDo(print());
+    }
+
+    @Test
     @DisplayName("GET, positive path")
     public void getOne() throws Exception {
         String ownerAsJson = getOwnerAsJson(null, "John", "Doe", "123 Main St", "Anytown", "8996746899");
