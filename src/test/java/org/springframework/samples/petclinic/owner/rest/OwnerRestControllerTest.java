@@ -16,8 +16,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.io.UnsupportedEncodingException;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -39,6 +38,30 @@ public class OwnerRestControllerTest {
     @BeforeEach
     public void setup() {
         ownerRepository.deleteAll();
+    }
+
+    @Test
+    @DisplayName("PUT, positive path")
+    public void update() throws Exception {
+        String ownerAsJson = getOwnerAsJson(null, "John", "Doe", "123 Main St", "Anytown", "8996746899");
+        MvcResult mvcResult = saveOwner(ownerAsJson);
+        Integer id = getId(mvcResult);
+
+        String dto = """
+                {
+                     "id": %d,
+                     "firstName": "Johny",
+                     "lastName": "Doe-vie",
+                     "address": "123 Main Street",
+                     "city": "California",
+                     "telephone": "000000000"
+                 }""".formatted(id);
+
+        mockMvc.perform(put("/rest/owners/{id}", id)
+                        .content(dto)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andDo(print());
     }
 
     @Test
