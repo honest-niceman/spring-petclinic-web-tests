@@ -46,6 +46,9 @@ dependencies {
 
     testImplementation (
             'org.springframework.boot:spring-boot-starter-test',
+            'org.testcontainers:junit-jupiter',
+            'org.testcontainers:postgresql',
+            'org.springframework.boot:spring-boot-testcontainers'
     )
 
     compileOnly (
