@@ -27,6 +27,7 @@ dependencies {
         'javax.cache:cache-api',
         'jakarta.xml.bind:jakarta.xml.bind-api',
         'org.flywaydb:flyway-core',
+        'org.flywaydb:flyway-database-postgresql',
         'org.springframework.kafka:spring-kafka'
     )
 

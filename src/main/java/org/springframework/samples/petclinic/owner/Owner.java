@@ -47,7 +47,6 @@ import jakarta.validation.constraints.NotBlank;
 public class Owner extends Person {
 
 	@Column(name = "address")
-	@NotBlank
 	private String address;
 
 	@Column(name = "city")
@@ -56,7 +55,6 @@ public class Owner extends Person {
 
 	@Column(name = "telephone")
 	@NotBlank
-	@Digits(fraction = 0, integer = 10)
 	private String telephone;
 
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
