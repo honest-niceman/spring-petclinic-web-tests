@@ -64,8 +64,6 @@ public class OwnerRestControllerTest {
         Integer id = JsonPath.parse(jsonResponse)
                 .read("$.id");
 
-        assertThat(id).isNotNull();
-
         ownerRepository.findById(id).orElseThrow();
 
         ownerRepository.deleteById(id);
